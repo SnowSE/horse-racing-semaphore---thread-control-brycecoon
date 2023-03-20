@@ -23,6 +23,8 @@ namespace HorseRacing
         private static AutoResetEvent mainCanGo2 = new AutoResetEvent(true);
         private static AutoResetEvent mainCanGo3 = new AutoResetEvent(true);
 
+        public static Thread[] threads = new Thread[3];
+
         static int dist1 = 0;
         static int dist2 = 0;
         static int dist3 = 0;
@@ -57,12 +59,15 @@ namespace HorseRacing
         {
             bool gameRunning = true;
 
-            Thread horseA = new Thread(goHorse);
-            Thread horseB = new Thread(goHorse);
-            Thread horseC = new Thread(goHorse);
-            horseA.Start();
-            horseB.Start();
-            horseC.Start();
+            for(int i = 0; i < 2; i++)
+            {
+                threads[i] = new Thread(goHorse);
+            }
+
+            for(int i = 0; i < 2; i++)
+            {
+                threads[i].Start();
+            }
 
             while (gameRunning)
             {
@@ -96,7 +101,7 @@ namespace HorseRacing
 
         public static void goHorse(object ID)
         {
-            int threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+            ID = new object();
             int objectID = (int)ID;
 
             while (true)
