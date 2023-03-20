@@ -15,13 +15,10 @@ namespace HorseRacing
         //Todo: 5) The first horse to travel 50 spaces is pronounced the winner
         //Todo: 6) 2 - All kids die appropriately  (hint - how did we do this in Matrix??)
 
-        private static AutoResetEvent horseCanGo1 = new AutoResetEvent(true);
-        private static AutoResetEvent horseCanGo2 = new AutoResetEvent(true);
-        private static AutoResetEvent horseCanGo3 = new AutoResetEvent(true);
+        public static AutoResetEvent[] horseCanGo = new AutoResetEvent[3];
+        public static AutoResetEvent[] mainCanGo = new AutoResetEvent[3];
 
-        private static AutoResetEvent mainCanGo1 = new AutoResetEvent(true);
-        private static AutoResetEvent mainCanGo2 = new AutoResetEvent(true);
-        private static AutoResetEvent mainCanGo3 = new AutoResetEvent(true);
+        static List<int> winners = new List<int>();
 
         public static Thread[] threads = new Thread[3];
 
@@ -30,7 +27,72 @@ namespace HorseRacing
         static int dist3 = 0;
 
         public static object Lock = new Object();
+        static bool gameRunning = true;
 
+        static void Main(string[] args)
+        {
+
+            for (int i = 0; i <= 2; i++)
+            {
+                horseCanGo[i] = new AutoResetEvent(false);
+                mainCanGo[i] = new AutoResetEvent(false);
+                threads[i] = new Thread(goHorse);
+
+                threads[i].Start(i);
+            }
+
+
+            while (gameRunning)
+            {
+                for (int i = 0; i <= 2; i++)
+                {
+                    horseCanGo[i].Set();
+                }
+                for (int i = 0; i <= 2; i++)
+                {
+                    mainCanGo[i].Set();
+                }
+            }
+
+            for (int i = 0; i <= 2; i++)
+            {
+                horseCanGo[i].Set();
+            }
+
+            for (int i = 0; i <= 2; i++)
+            {
+                threads[i].Join();
+            }
+
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine("Welcome to the Racing Program:");
+            DrawScreen();
+
+            if (dist1 == 50 || dist2 == 50 || dist3 == 50)
+            {
+                gameRunning = false;
+                winners.Clear();
+
+                if (dist1 == 50)
+                {
+                    winners.Add(1);
+                }
+                if (dist2 == 50)
+                {
+                    winners.Add(2);
+                }
+                if (dist3 == 50)
+                {
+                    winners.Add(3);
+                }
+
+                foreach (int T in winners)
+                {
+                    Console.WriteLine("The Winner was Horse " + T);
+                }
+
+            }
+        }
         public static void DrawScreen()
         {
             string s1 = "";
@@ -55,109 +117,47 @@ namespace HorseRacing
             Console.WriteLine("HorseB: [" + s2 + ']');
             Console.WriteLine("HorseC: [" + s3 + ']');
         }
-        static void Main(string[] args)
-        {
-            bool gameRunning = true;
 
-            for(int i = 0; i < 2; i++)
-            {
-                threads[i] = new Thread(goHorse);
-            }
-
-            for(int i = 0; i < 2; i++)
-            {
-                threads[i].Start();
-            }
-
-            while (gameRunning)
-            {
-                horseCanGo1.Set();
-                horseCanGo2.Set();
-                horseCanGo3.Set();
-
-                Console.SetCursorPosition(0, 0);
-                Console.WriteLine("Welcome to the Racing Program:");
-                DrawScreen();
-
-
-                mainCanGo1.WaitOne();
-                mainCanGo2.WaitOne();
-                mainCanGo3.WaitOne();
-
-                if (checkWinner().Count > 0)
-                {
-                    foreach (int T in checkWinner())
-                    {
-                        Console.WriteLine("The winner of this race was " + T);
-                    }
-                    gameRunning = false;
-                    
-                    // horseA.Abort();
-                    // horseB.Abort();
-                    // horseC.Abort();
-                }
-            }
-        }
 
         public static void goHorse(object ID)
         {
-            ID = new object();
             int objectID = (int)ID;
 
-            while (true)
+            Random rand = new Random();
+
+            while (gameRunning)
             {
-                horseCanGo1.WaitOne();
-                horseCanGo2.WaitOne();
-                horseCanGo3.WaitOne();
-
-                //create random value
-                Random rand = new Random();
-                int value = rand.Next(1, 2);
-
-                //how to increase correct distance?
+            int value = rand.Next(1, 1000);
+                horseCanGo[objectID].WaitOne();
 
 
-                if (value == 2)
+                if ( value == 5)
                 {
-                    if (objectID == 0)
                     {
-                        dist1++;
-                    }
-                    if (objectID == 1)
+                        if (objectID == 0)
+                        {
+                            dist1++;
+                        }
+                        else if (objectID == 1)
+                        {
+                            dist2++;
+                        }
+                        else if (objectID == 2)
+                        {
+                            dist3++;
+                        }
+                        //increase the distance
+
+                    if (dist1 == 50 || dist2 == 50 || dist3 == 50)
                     {
-                        dist2++;
+                        gameRunning = false;
+                        DrawScreen();
                     }
-                    if (objectID == 2)
-                    {
-                        dist3++;
                     }
-                    //increase the distance
                 }
-                mainCanGo1.Set();
-                mainCanGo2.Set();
-                mainCanGo3.Set();
-
+                mainCanGo[objectID].Set();
             }
         }
 
-        static List<int> checkWinner()
-        {
-            List<int> winners = new List<int>();
-
-            if (dist1 == 50)
-            {
-                winners.Add(1);
-            }
-            if (dist2 == 50)
-            {
-                winners.Add(2);
-            }
-            if (dist3 == 50)
-            {
-                winners.Add(3);
-            }
-
-            return winners;
-        }
     }
 }
