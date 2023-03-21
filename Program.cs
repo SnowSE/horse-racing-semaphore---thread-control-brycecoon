@@ -50,7 +50,7 @@ namespace HorseRacing
                 }
                 for (int i = 0; i <= 2; i++)
                 {
-                    mainCanGo[i].Set();
+                    mainCanGo[i].WaitOne();
                 }
             }
 
@@ -95,6 +95,7 @@ namespace HorseRacing
         }
         public static void DrawScreen()
         {
+            Console.Clear();
             string s1 = "";
             string s2 = "";
             string s3 = "";
